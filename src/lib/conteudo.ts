@@ -1,13 +1,15 @@
-// src/lib/conteudo.ts
 export type TipoItem = 'copiar' | 'responder';
 
+/** Um exercício dentro de uma lição. */
 export interface Item {
     tipo: TipoItem;
-    enunciado: string; // o que aparece grande em cima
-    resposta: string;  // o alvo que o aluno precisa digitar
+    /** O que aparece grande na tela (a letra, sílaba, número ou conta). */
+    enunciado: string;
+    /** Alvo que o aluno precisa digitar para acertar o item. */
+    resposta: string;
 }
 
-// licaoId -> lista de itens
+/** Conteúdo das lições, indexado por `licaoId` (ex.: `"alfabeto-1"`). */
 export const CONTEUDO: Record<string, Item[]> = {
     'alfabeto-1': [
         { tipo: 'copiar', enunciado: 'A', resposta: 'A' },
@@ -19,7 +21,7 @@ export const CONTEUDO: Record<string, Item[]> = {
         { tipo: 'copiar', enunciado: 'E', resposta: 'E' },
         { tipo: 'copiar', enunciado: 'F', resposta: 'F' },
     ],
-    'alfabeto-3': [ // a lição destacada no seu estadoDemo
+    'alfabeto-3': [ // lição destacada em estadoDemo() (ver estado.ts)
         { tipo: 'copiar', enunciado: 'G', resposta: 'G' },
         { tipo: 'copiar', enunciado: 'H', resposta: 'H' },
         { tipo: 'copiar', enunciado: 'I', resposta: 'I' },

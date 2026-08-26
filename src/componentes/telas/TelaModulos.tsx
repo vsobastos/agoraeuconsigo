@@ -4,6 +4,7 @@ import { usarApp } from '@/contexto/AppProvider';
 import { MODULOS_CONFIG, ORDEM_MODULOS } from '@/lib/modulos';
 import { ModuloId } from '@/lib/estado';
 
+/** Tela com o grid das quatro áreas de estudo (módulos). */
 export function TelaModulos() {
     const { abrirModulo, dispararEvento } = usarApp();
 

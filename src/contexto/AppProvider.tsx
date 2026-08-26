@@ -9,15 +9,20 @@ import { FRASES } from '@/lib/frases';
 
 type Tela = 'inicial' | 'modulos' | 'licoes' | 'atividade';
 
+/** Estado de navegação client-side (não persistido) das telas da SPA. */
 interface Navegacao {
     tela: Tela;
     moduloAtivo: ModuloId | null;
     licaoAtiva: string | null;
     destaque: string | null;
-    // false quando se volta pras lições após terminar uma atividade — já se ouviu a introdução
+    /**
+     * `false` quando se volta para as lições após terminar uma atividade —
+     * nesse caso a introdução da tela já foi ouvida e não deve repetir.
+     */
     anunciarLicoes: boolean;
 }
 
+/** Uma chamada de ferramenta retornada pelo agente Nina (ver `/api/agente`). */
 interface Acao { ferramenta: string; args: Record<string, unknown>; }
 
 interface Contexto {
@@ -34,12 +39,18 @@ interface Contexto {
 
 const Ctx = createContext<Contexto | null>(null);
 
+/** Hook de acesso ao contexto global do app. Deve ser usado dentro de {@link AppProvider}. */
 export const usarApp = () => {
     const c = useContext(Ctx);
     if (!c) throw new Error('usarApp fora do AppProvider');
     return c;
 };
 
+/**
+ * Provider raiz do app: mantém o estado persistido (`EstadoApp`), o estado de
+ * navegação client-side e a orquestração de fala/áudio da assistente Nina.
+ * Renderiza `null` até o estado ser carregado do `localStorage` no mount.
+ */
 export function AppProvider({ children }: { children: React.ReactNode }) {
     const [estado, setEstado] = useState<EstadoApp | null>(null);
     const [nav, setNav] = useState<Navegacao>({
@@ -68,11 +79,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         salvarEstado(novo);
     }, []);
 
-    // Nina só fala uma coisa por vez: qualquer fala nova cala a anterior (gravada ou TTS)
+    /** Áudio (gravado ou TTS) atualmente em reprodução — a Nina só fala uma coisa por vez. */
     const audioAtualRef = useRef<HTMLAudioElement | null>(null);
-    // libera quem está esperando a fala atual terminar (ver dispararEvento) quando ela é cortada
+    /** Callback que libera quem está esperando a fala atual terminar (ver `dispararEvento`), quando ela é cortada antes de acabar. */
     const liberarEsperaRef = useRef<(() => void) | null>(null);
 
+    /**
+     * Interrompe imediatamente qualquer fala em andamento (TTS ou áudio gravado)
+     * e libera quem estava esperando por ela.
+     */
     const pararFala = useCallback(() => {
         if (typeof window === 'undefined') return;
         window.speechSynthesis?.cancel();
@@ -84,8 +99,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         liberarEsperaRef.current = null;
     }, []);
 
-    // devolve uma Promise que só resolve quando a fala termina de verdade —
-    // assim quem chama pode esperar o áudio acabar antes de seguir em frente
+    /**
+     * Fala um texto dinâmico via TTS (Web Speech API).
+     *
+     * @returns Promise que só resolve quando a fala termina de verdade, para
+     * que quem chamar possa esperar o áudio acabar antes de seguir em frente.
+     */
     const falar = useCallback((texto: string): Promise<void> => {
         if (typeof window === 'undefined' || !window.speechSynthesis || !texto) return Promise.resolve();
         pararFala();
@@ -100,7 +119,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
     }, [pararFala]);
 
-    // frases fixas (catálogo em frases.ts) usam o áudio gravado em vez do TTS
+    /**
+     * Toca um áudio pré-gravado (frases fixas do catálogo em `frases.ts`) em
+     * vez de gerar a fala por TTS.
+     *
+     * @returns Promise que resolve quando o áudio termina de tocar.
+     */
     const tocarAudio = useCallback((caminho: string): Promise<void> => {
         if (typeof window === 'undefined') return Promise.resolve();
         pararFala();
@@ -116,7 +140,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
     }, [pararFala]);
 
-    // primeiro toque na tela "destrava" o áudio: retoma o que ficou bloqueado por autoplay
+    /** Primeiro toque na tela "destrava" o áudio: retoma o que ficou bloqueado por autoplay. */
     useEffect(() => {
         const retomarAudioBloqueado = () => {
             const pendente = audioAtualRef.current;
@@ -128,6 +152,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return () => window.removeEventListener('pointerdown', retomarAudioBloqueado);
     }, []);
 
+    /** Soletra uma palavra em voz alta, uma letra de cada vez, em ritmo lento. */
     const soletrar = useCallback((palavra: string) => {
         if (typeof window === 'undefined' || !window.speechSynthesis) return;
         pararFala();
@@ -139,6 +164,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
     }, [pararFala]);
 
+    /** Aplica no estado de navegação uma ação de ferramenta retornada pelo agente Nina. */
     const executarAcao = useCallback((acao: Acao) => {
         const a = acao.args;
         switch (acao.ferramenta) {
@@ -155,8 +181,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
     }, [soletrar]);
 
-    // resolve só quando a Nina termina de falar — quem chama pode esperar antes de avançar
-    // (ex: só trocar de exercício depois que o "acertou" tiver acabado de tocar)
+    /**
+     * Notifica o agente Nina (`POST /api/agente`) sobre um evento do app —
+     * navegação, acerto, erro, pedido de ajuda — e executa a fala e as ações
+     * de ferramenta que ele retornar. Se `fraseId` corresponder a uma frase do
+     * catálogo, toca o áudio pré-gravado em vez de esperar a fala dinâmica.
+     * Não faz nada se a assistente estiver desligada. Falhas na chamada à API
+     * são silenciosas: o app segue navegável por toque, só sem a Nina.
+     *
+     * @param evento descrição em texto livre do que aconteceu, enviada ao agente
+     * @param fraseId id opcional de uma frase pré-gravada em `frases.ts`
+     * @returns Promise que só resolve quando a Nina termina de falar, para que
+     * quem chamar possa esperar antes de avançar (ex.: só trocar de exercício
+     * depois que o áudio de "acertou" tiver acabado de tocar).
+     */
     const dispararEvento = useCallback(async (evento: string, fraseId?: string) => {
         if (!estado || !estado.assistenteAtivo) return;
         const frase = fraseId ? FRASES[fraseId] : undefined;
@@ -177,16 +215,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         await falaConcluida;
     }, [estado, falar, tocarAudio, executarAcao]);
 
-    // toda navegação cala a fala pendente/bloqueada — senão ela pode ser retomada
-    // fora de contexto pelo "destrava áudio" no toque que dispara a própria navegação
+    /**
+     * Navega para uma tela. Sempre interrompe a fala pendente/bloqueada antes
+     * de navegar — senão ela pode ser retomada fora de contexto pelo "destrava
+     * áudio" no mesmo toque que disparou a navegação.
+     */
     const irPara = useCallback((t: Tela) => {
         pararFala();
         setNav((n) => ({ ...n, tela: t, destaque: null }));
     }, [pararFala]);
+    /**
+     * Abre a tela de lições de um módulo.
+     *
+     * @param anunciar se `false`, a tela não repete a introdução falada (usado
+     * ao voltar de uma atividade recém-concluída, cuja introdução já foi ouvida)
+     */
     const abrirModulo = useCallback((m: ModuloId, anunciar: boolean = true) => {
         pararFala();
         setNav((n) => ({ ...n, moduloAtivo: m, tela: 'licoes', destaque: null, anunciarLicoes: anunciar }));
     }, [pararFala]);
+    /** Abre a tela de atividade de uma lição específica. */
     const abrirLicao = useCallback((id: string) => {
         pararFala();
         setNav((n) => ({ ...n, licaoAtiva: id, tela: 'atividade', destaque: null }));

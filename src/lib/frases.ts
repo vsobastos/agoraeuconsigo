@@ -1,13 +1,16 @@
-// src/lib/frases.ts
-// Catálogo das falas fixas da Nina. Cada id = um áudio no ElevenLabs.
-// Falas com conteúdo variável (soletrar uma palavra, ler uma conta específica)
-// NÃO entram aqui — essas você gera por item, a partir de conteudo.ts.
-
+/** Fala fixa da Nina com um áudio pré-gravado correspondente (gerado no ElevenLabs). */
 export interface Frase { id: string; texto: string; audio: string; }
 
-// Áudios servidos estaticamente a partir de public/audios/
+/** Diretório em `public/` de onde os áudios pré-gravados são servidos estaticamente. */
 const CAMINHO_AUDIOS = '/audios';
 
+/**
+ * Catálogo das falas fixas da Nina, indexado por id.
+ *
+ * Falas com conteúdo variável (soletrar uma palavra, ler uma conta específica)
+ * não entram aqui — essas são geradas dinamicamente por item, a partir de
+ * `conteudo.ts`, e usam TTS em vez de áudio pré-gravado.
+ */
 export const FRASES: Record<string, Frase> = {
     inicial_novo: {
         id: 'inicial_novo',

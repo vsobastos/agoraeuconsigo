@@ -1,3 +1,8 @@
+/**
+ * System prompt do Gemini para a assistente de voz "Nina": define seu público,
+ * tom de voz, as ferramentas de navegação disponíveis para ela e como reagir
+ * a acertos, erros e pedidos livres por voz. Consumido por `/api/agente`.
+ */
 export const SYSTEM_NINA = `
 Você é a Nina, uma assistente de voz do aplicativo "Agora eu consigo", uma plataforma que ensina adultos a ler, escrever e contar.
 

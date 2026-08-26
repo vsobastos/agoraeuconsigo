@@ -3,6 +3,7 @@ import { GoogleGenerativeAI, SchemaType, type Tool } from '@google/generative-ai
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY ?? '');
 
+/** Declarações de função (tool-calling) que o agente Nina pode invocar para agir no app. */
 const tools: Tool[] = [
     {
         functionDeclarations: [
@@ -67,6 +68,14 @@ const tools: Tool[] = [
     },
 ];
 
+/**
+ * Único endpoint do app: recebe o estado atual e um evento em texto livre,
+ * consulta o Gemini com o prompt da Nina e as ferramentas de navegação, e
+ * devolve a fala da assistente junto das ações a executar no front-end.
+ *
+ * Nunca retorna erro HTTP — falhas do modelo resultam em fala e ações vazias
+ * (status 200) para que o app siga navegável por toque, sem a Nina.
+ */
 export async function POST(req: Request) {
     try {
         const { estado, evento } = await req.json();

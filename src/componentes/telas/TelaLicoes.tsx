@@ -1,4 +1,3 @@
-// src/componentes/telas/TelaLicoes.tsx
 'use client';
 import { useEffect } from 'react';
 import { Check, Lock, ArrowRight } from 'lucide-react';
@@ -6,16 +5,16 @@ import { MODULOS_CONFIG } from '@/lib/modulos';
 import { usarApp } from '@/contexto/AppProvider';
 import { Licao, licaoDestaque } from '@/lib/estado';
 
+/** Tela com a lista de lições de um módulo, com status de bloqueio/progresso. */
 export function TelaLicoes() {
     const { estado, nav, abrirLicao, dispararEvento } = usarApp();
     const moduloId = nav.moduloAtivo;
 
-    // guarda: sem módulo selecionado não há o que mostrar
     if (!moduloId) return null;
 
     const modulo = estado.modulos[moduloId];
     const cfg = MODULOS_CONFIG[moduloId];
-    const destaque = licaoDestaque(modulo); // a lição que deve pulsar
+    const destaque = licaoDestaque(modulo);
 
     useEffect(() => {
         // depois de terminar uma atividade e voltar pra cá, já se ouviu essa introdução
@@ -37,7 +36,7 @@ export function TelaLicoes() {
                 'Explique com carinho que primeiro ele precisa terminar a que está brilhando.',
                 'licao_travada'
             );
-            return; // não navega
+            return;
         }
         // a tela de atividade já se anuncia sozinha no próprio mount — não dispara evento aqui
         abrirLicao(licao.id);
@@ -53,7 +52,6 @@ export function TelaLicoes() {
 
                     return (
                         <div key={licao.id} className="relative">
-                            {/* halo pulsante só na atividade atual */}
                             {ehDestaque && (
                                 <span
                                     className={`absolute inset-0 rounded-2xl ${cfg.bg} opacity-40 motion-safe:animate-ping`}
@@ -72,7 +70,6 @@ export function TelaLicoes() {
                                 {/* número = a ordem E um numeral pra aprender */}
                                 <span className="text-4xl font-black tabular-nums">{licao.indice}</span>
 
-                                {/* marcador de status à direita */}
                                 <span className="ml-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/25">
                                     {feita ? <Check size={30} />
                                         : trancada ? <Lock size={26} />

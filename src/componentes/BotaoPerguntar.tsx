@@ -1,13 +1,14 @@
-// src/componentes/BotaoPerguntar.tsx
 'use client';
 import { useEffect, useState } from 'react';
 import { Mic, Loader2 } from 'lucide-react';
 import { usarApp } from '@/contexto/AppProvider';
 
+/** Resultado de reconhecimento de fala da Web Speech API (não tipada pelo TS). */
 interface ResultadoReconhecimento {
     results: { [indice: number]: { [alternativa: number]: { transcript: string } } };
 }
 
+/** Subconjunto usado da interface `SpeechRecognition`/`webkitSpeechRecognition` (sem type lib própria). */
 interface ReconhecimentoVoz {
     lang: string;
     interimResults: boolean;
@@ -20,6 +21,10 @@ interface ReconhecimentoVoz {
 
 type ConstrutorReconhecimento = new () => ReconhecimentoVoz;
 
+/**
+ * Obtém o construtor de reconhecimento de voz do navegador, se suportado.
+ * Não está disponível em todos os navegadores (notavelmente o Firefox).
+ */
 function obterConstrutor(): ConstrutorReconhecimento | null {
     if (typeof window === 'undefined') return null;
     const w = window as unknown as {
@@ -29,8 +34,12 @@ function obterConstrutor(): ConstrutorReconhecimento | null {
     return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-// botão global: o aluno aperta, fala um pedido livre ("volta pro menu", "quero ver os números"...)
-// e a transcrição vira um evento pro mesmo agente que já sabe navegar pelo app
+/**
+ * Botão global (mic) de pedido livre por voz: o aluno aperta, fala um pedido
+ * livre ("volta pro menu", "quero ver os números"...) e a transcrição vira um
+ * evento para o mesmo agente Nina que já sabe navegar pelo app. Se oculta
+ * quando a assistente está desligada ou o navegador não suporta reconhecimento de voz.
+ */
 export function BotaoPerguntar() {
     const { estado, nav, pararFala, dispararEvento } = usarApp();
     const [suportado, setSuportado] = useState(false);
@@ -45,6 +54,7 @@ export function BotaoPerguntar() {
 
     if (!estado.assistenteAtivo || !suportado) return null;
 
+    /** Inicia uma captura de fala única e envia a transcrição como evento ao agente Nina. */
     const escutar = () => {
         const Construtor = obterConstrutor();
         if (!Construtor || ouvindo || processando) return;

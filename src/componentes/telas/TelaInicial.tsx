@@ -3,11 +3,12 @@ import { useEffect } from 'react';
 import { Mic, MicOff, Play, ArrowRight } from 'lucide-react';
 import { usarApp } from '@/contexto/AppProvider';
 
+/** Tela de entrada do app: apresenta a Nina e o botão de começar/continuar. */
 export function TelaInicial() {
     const { estado, abrirModulo, irPara, aplicarEstado, dispararEvento } = usarApp();
     const novo = estado.usuarioNovo;
 
-    // Nina fala assim que a tela abre — mensagem diferente pra novo x recorrente
+    /** Nina fala assim que a tela abre — mensagem diferente para usuário novo x recorrente. */
     useEffect(() => {
         dispararEvento(
             novo

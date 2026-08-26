@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   description: "Plataforma de alfabetização para adultos, com a assistente Nina.",
 };
 
+/** Layout raiz do Next.js: carrega as fontes e envolve a app no {@link AppProvider}. */
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -1,4 +1,3 @@
-// src/componentes/telas/TelaAtividade.tsx
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Check, Volume2, ArrowRight } from 'lucide-react';
@@ -7,8 +6,10 @@ import { CONTEUDO } from '@/lib/conteudo';
 import { usarApp } from '@/contexto/AppProvider';
 import { registrarProgresso } from '@/lib/estado';
 
+/** Normaliza texto para comparação de resposta: maiúsculas, sem espaços. */
 const norm = (s: string) => s.toUpperCase().replace(/\s+/g, '');
 
+/** Tela de exercícios de uma lição: apresenta cada item e confere a resposta digitada. */
 export function TelaAtividade() {
     const { estado, nav, aplicarEstado, abrirModulo, dispararEvento } = usarApp();
     const moduloId = nav.moduloAtivo;
@@ -17,7 +18,7 @@ export function TelaAtividade() {
     const [indice, setIndice] = useState(0);
     const [digitado, setDigitado] = useState('');
     const [acertou, setAcertou] = useState(false);
-    // só mostra verde/vermelho depois de clicar em "Conferir" — digitando, as caixas ficam neutras
+    /** Só mostra feedback verde/vermelho depois de clicar em "Conferir" — digitando, as caixas ficam neutras. */
     const [conferido, setConferido] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -28,7 +29,7 @@ export function TelaAtividade() {
     const alvo = item ? norm(item.resposta) : '';
     const dig = norm(digitado);
 
-    // Nina apresenta cada item ao entrar/avançar
+    /** Nina apresenta cada item ao entrar na tela ou avançar para o próximo. */
     useEffect(() => {
         if (!item) return;
         dispararEvento(
@@ -49,6 +50,7 @@ export function TelaAtividade() {
         );
     }
 
+    /** Confere a resposta digitada contra o alvo do item atual e reage (acerto/erro/conclusão). */
     const conferir = () => {
         setConferido(true);
         if (dig === alvo) {
@@ -78,12 +80,10 @@ export function TelaAtividade() {
 
     return (
         <main className="flex min-h-dvh flex-col bg-stone-50 px-6 py-10">
-            {/* quantos itens de quantos */}
             <p className="mb-6 text-center text-lg font-semibold tabular-nums text-stone-400">
                 {Math.min(indice + 1, total)} / {total}
             </p>
 
-            {/* o modelo — grande, na cor do módulo */}
             <div className="mb-10 text-center">
                 <span className={`inline-block rounded-2xl px-8 py-6 text-6xl font-black text-white ${cfg.bg}`}>
                     {item.enunciado}
@@ -124,7 +124,6 @@ export function TelaAtividade() {
                 />
             </div>
 
-            {/* ações */}
             <div className="mx-auto flex w-full max-w-md flex-col gap-3">
                 {!acertou && (
                     <button

@@ -1,19 +1,19 @@
-// src/componentes/BotaoVoltar.tsx
 'use client';
 import { ArrowLeft } from 'lucide-react';
 import { usarApp } from '@/contexto/AppProvider';
 
-// pra onde cada tela volta
+/** Tela anterior no back stack, para cada tela que tem "voltar". */
 const DESTINO = {
     modulos: 'inicial',
     licoes: 'modulos',
     atividade: 'licoes',
 } as const;
 
+/** Botão global de voltar, ausente na tela inicial (topo do back stack). */
 export function BotaoVoltar() {
     const { nav, irPara } = usarApp();
     const destino = DESTINO[nav.tela as keyof typeof DESTINO];
-    if (!destino) return null; // tela inicial não tem "voltar"
+    if (!destino) return null;
 
     return (
         <button
