@@ -50,8 +50,8 @@ export function TelaInicial() {
                     shadow-md transition active:scale-95
                     focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-400
                     ${estado.assistenteAtivo
-                        ? 'bg-sky-500 text-white'
-                        : 'bg-white text-slate-400'}`}
+                        ? 'bg-sky-700 text-white'
+                        : 'bg-white text-slate-500'}`}
             >
                 {estado.assistenteAtivo ? <Mic size={30} /> : <MicOff size={30} />}
             </button>
@@ -72,7 +72,7 @@ export function TelaInicial() {
                     onClick={aoTocarComecar}
                     aria-label={novo ? 'Começar' : 'Continuar'}
                     className="cursor-pointer relative flex h-44 w-44 flex-col items-center justify-center gap-2
-                     rounded-full bg-orange-500 text-white shadow-xl transition active:scale-95
+                     rounded-full bg-orange-700 text-white shadow-xl transition active:scale-95
                      focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
                 >
                     {novo ? <Play size={60} /> : <ArrowRight size={60} />}

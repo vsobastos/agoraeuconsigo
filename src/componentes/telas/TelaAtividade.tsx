@@ -128,7 +128,7 @@ export function TelaAtividade() {
                 {!acertou && (
                     <button
                         onClick={conferir}
-                        className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-6
+                        className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-700 py-6
                        text-2xl font-bold text-white shadow-md transition active:scale-95
                        focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
                     >
