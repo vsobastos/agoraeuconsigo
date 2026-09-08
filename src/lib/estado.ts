@@ -28,6 +28,7 @@ export interface EstadoApp {
 }
 
 const MODULOS: ModuloId[] = ['alfabeto', 'silabas', 'numeros', 'calculos'];
+const VERSAO_ATUAL = 1;
 
 /**
  * Cria as 4 lições de um módulo, com a primeira já disponível e as demais bloqueadas.
@@ -49,7 +50,7 @@ export function estadoInicial(): EstadoApp {
     const modulos = {} as Record<ModuloId, Modulo>;
     for (const id of MODULOS) modulos[id] = { id, licoes: criarLicoes(id) };
     return {
-        versao: 1,
+        versao: VERSAO_ATUAL,
         usuarioNovo: true,
         assistenteAtivo: true,
         ultimoModulo: null,
@@ -112,17 +113,77 @@ export function licaoDestaque(modulo: Modulo): Licao | null {
 const CHAVE = 'agora-eu-consigo:estado';
 
 /**
+ * Checagem estrutural leve: só o suficiente para saber se os dados salvos
+ * têm a forma mínima de um `EstadoApp` (e não, por exemplo, `null`, uma
+ * string, ou um objeto de outra chave do localStorage).
+ */
+function estadoValido(dados: unknown): dados is Partial<EstadoApp> & Record<string, unknown> {
+    return typeof dados === 'object' && dados !== null && 'modulos' in dados;
+}
+
+/**
+ * Mescla as lições salvas com as do estado inicial, lição por lição, mantendo
+ * o progresso reconhecível e preenchendo qualquer coisa ausente ou malformada
+ * com o valor padrão daquela lição — em vez de descartar o módulo inteiro.
+ */
+function mesclarLicoes(base: Licao[], salvas: unknown): Licao[] {
+    if (!Array.isArray(salvas)) return base;
+    return base.map((licaoBase) => {
+        const salva = salvas.find(
+            (l): l is Licao => typeof l === 'object' && l !== null && (l as Licao).id === licaoBase.id,
+        );
+        return salva ? { ...licaoBase, ...salva } : licaoBase;
+    });
+}
+
+function mesclarModulos(
+    base: Record<ModuloId, Modulo>, salvos: unknown,
+): Record<ModuloId, Modulo> {
+    if (typeof salvos !== 'object' || salvos === null) return base;
+    const modulos = {} as Record<ModuloId, Modulo>;
+    for (const id of MODULOS) {
+        const moduloSalvo = (salvos as Record<string, unknown>)[id];
+        const licoesSalvas = typeof moduloSalvo === 'object' && moduloSalvo !== null
+            ? (moduloSalvo as Partial<Modulo>).licoes
+            : undefined;
+        modulos[id] = { id, licoes: mesclarLicoes(base[id].licoes, licoesSalvas) };
+    }
+    return modulos;
+}
+
+/**
+ * Migra dados salvos com uma versão diferente da atual para o formato atual,
+ * preservando o progresso reconhecível em vez de descartá-lo. Hoje só existe
+ * a versão 1, então este é o único caminho — mas estabelece o padrão para
+ * quando o formato do estado mudar de novo no futuro.
+ */
+function migrarEstado(dados: Partial<EstadoApp> & Record<string, unknown>): EstadoApp {
+    const base = estadoInicial();
+    return {
+        ...base,
+        usuarioNovo: dados.usuarioNovo ?? base.usuarioNovo,
+        assistenteAtivo: dados.assistenteAtivo ?? base.assistenteAtivo,
+        ultimoModulo: dados.ultimoModulo ?? base.ultimoModulo,
+        ultimaLicao: dados.ultimaLicao ?? base.ultimaLicao,
+        modulos: mesclarModulos(base.modulos, dados.modulos),
+        versao: VERSAO_ATUAL,
+    };
+}
+
+/**
  * Lê o estado salvo em `localStorage`. Retorna um estado inicial novo quando
- * não há nada salvo, os dados estão corrompidos, ou a versão salva é incompatível.
+ * não há nada salvo ou os dados estão genuinamente corrompidos; quando a
+ * versão salva é diferente da atual, migra em vez de apagar o progresso.
  */
 export function carregarEstado(): EstadoApp {
     if (typeof window === 'undefined') return estadoInicial();
     try {
         const bruto = window.localStorage.getItem(CHAVE);
         if (!bruto) return estadoInicial();
-        const dados = JSON.parse(bruto) as EstadoApp;
-        if (dados.versao !== 1) return estadoInicial();
-        return dados;
+        const dados = JSON.parse(bruto);
+        if (!estadoValido(dados)) return estadoInicial();
+        if (dados.versao === VERSAO_ATUAL) return dados as EstadoApp;
+        return migrarEstado(dados);
     } catch {
         return estadoInicial();
     }
