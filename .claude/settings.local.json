@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf \"/c/Users/EPTI - TI/Downloads/AgoraEuConsigo/.next\" *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\EPTI - TI\\Downloads\\AgoraEuConsigo\\.next"
+    ]
+  }
+}
