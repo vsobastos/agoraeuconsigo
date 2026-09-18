@@ -93,7 +93,7 @@ export function BotaoPerguntar() {
             className={`absolute cursor-pointer right-5 bottom-5 z-10 flex h-16 w-16 items-center justify-center
                  rounded-full shadow-md transition active:scale-95 hover:scale-105
                  focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300
-                 ${ouvindo ? 'bg-sky-500 text-white motion-safe:animate-pulse' : 'bg-white text-sky-600'}`}
+                 ${ouvindo ? 'bg-sky-700 text-white motion-safe:animate-pulse' : 'bg-white text-sky-600'}`}
         >
             {processando ? <Loader2 size={28} className="animate-spin" /> : <Mic size={28} />}
         </button>
