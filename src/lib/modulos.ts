@@ -17,10 +17,10 @@ export interface ConfigModulo {
 
 /** Configuração dos 4 módulos, indexada por {@link ModuloId}. */
 export const MODULOS_CONFIG: Record<ModuloId, ConfigModulo> = {
-    alfabeto: { id: 'alfabeto', nome: 'Letras', corNome: 'azul', glifo: 'Aa', bg: 'bg-sky-500', ring: 'ring-sky-300' },
-    silabas: { id: 'silabas', nome: 'Sílabas', corNome: 'roxo', glifo: 'ba', bg: 'bg-violet-500', ring: 'ring-violet-300' },
-    numeros: { id: 'numeros', nome: 'Números', corNome: 'verde', glifo: '123', bg: 'bg-emerald-500', ring: 'ring-emerald-300' },
-    calculos: { id: 'calculos', nome: 'Contas', corNome: 'laranja', glifo: '1+1', bg: 'bg-orange-500', ring: 'ring-orange-300' },
+    alfabeto: { id: 'alfabeto', nome: 'Letras', corNome: 'azul', glifo: 'Aa', bg: 'bg-sky-700', ring: 'ring-sky-300' },
+    silabas: { id: 'silabas', nome: 'Sílabas', corNome: 'roxo', glifo: 'ba', bg: 'bg-violet-600', ring: 'ring-violet-300' },
+    numeros: { id: 'numeros', nome: 'Números', corNome: 'verde', glifo: '123', bg: 'bg-emerald-700', ring: 'ring-emerald-300' },
+    calculos: { id: 'calculos', nome: 'Contas', corNome: 'laranja', glifo: '1+1', bg: 'bg-orange-700', ring: 'ring-orange-300' },
 };
 
 /** Ordem de exibição dos módulos nas telas. */
