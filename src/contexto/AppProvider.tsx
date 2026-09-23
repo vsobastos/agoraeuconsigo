@@ -6,8 +6,11 @@ import {
     EstadoApp, ModuloId, carregarEstado, salvarEstado, estadoInicial, estadoDemo,
 } from '@/lib/estado';
 import { FRASES } from '@/lib/frases';
+import { carregarPerfis, lerIdSessao } from '@/lib/perfis';
 
-type Tela = 'inicial' | 'modulos' | 'licoes' | 'atividade';
+export type Tela =
+    | 'consentimento' | 'primeiro_acesso' | 'entrada' | 'perfis' | 'meus_dados'
+    | 'modulos' | 'licoes' | 'atividade';
 
 /** Estado de navegação client-side (não persistido) das telas da SPA. */
 interface Navegacao {
@@ -22,6 +25,15 @@ interface Navegacao {
     anunciarLicoes: boolean;
 }
 
+/**
+ * Para onde o app vai depois do acesso (ou ao abrir com sessão válida): quem
+ * é novo escolhe uma área; quem volta cai direto nas lições da última área.
+ */
+function destinoInicio(estado: EstadoApp): Pick<Navegacao, 'tela' | 'moduloAtivo'> {
+    if (estado.usuarioNovo) return { tela: 'modulos', moduloAtivo: null };
+    return { tela: 'licoes', moduloAtivo: estado.ultimoModulo ?? 'alfabeto' };
+}
+
 /** Uma chamada de ferramenta retornada pelo agente Nina (ver `/api/agente`). */
 interface Acao { ferramenta: string; args: Record<string, unknown>; }
 
@@ -32,9 +44,15 @@ interface Contexto {
     abrirModulo: (m: ModuloId, anunciar?: boolean) => void;
     abrirLicao: (id: string) => void;
     irPara: (t: Tela) => void;
+    /** Leva ao início do app depois do acesso — ver {@link destinoInicio}. */
+    irParaInicio: () => void;
     aplicarEstado: (novo: EstadoApp) => void;
     dispararEvento: (evento: string, fraseId?: string) => Promise<void>;
     pararFala: () => void;
+    /** Fala um texto dinâmico via TTS, sem passar pelo agente Gemini — usada pelo fluxo de acesso. */
+    falar: (texto: string) => Promise<void>;
+    /** Toca um áudio pré-gravado do catálogo, sem passar pelo agente Gemini — usada pelo fluxo de acesso. */
+    tocarAudio: (caminho: string) => Promise<void>;
 }
 
 const Ctx = createContext<Contexto | null>(null);
@@ -54,24 +72,35 @@ export const usarApp = () => {
 export function AppProvider({ children }: { children: React.ReactNode }) {
     const [estado, setEstado] = useState<EstadoApp | null>(null);
     const [nav, setNav] = useState<Navegacao>({
-        tela: 'inicial', moduloAtivo: null, licaoAtiva: null, destaque: null, anunciarLicoes: true,
+        tela: 'modulos', moduloAtivo: null, licaoAtiva: null, destaque: null, anunciarLicoes: true,
     });
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
+        let carregado: EstadoApp;
         if (params.get('demo') === '1') {
-            const demo = estadoDemo();
-            salvarEstado(demo);
-            setEstado(demo);
-            return;
+            carregado = estadoDemo();
+            salvarEstado(carregado);
+        } else if (params.get('reset') === '1') {
+            carregado = estadoInicial();
+            salvarEstado(carregado);
+        } else {
+            carregado = carregarEstado();
         }
-        if (params.get('reset') === '1') {
-            const novo = estadoInicial();
-            salvarEstado(novo);
-            setEstado(novo);
-            return;
+        setEstado(carregado);
+
+        // decide a primeira tela já nesta mesma passada — se esperasse um efeito
+        // separado, outra tela chegaria a montar (e a Nina a falar) antes da troca
+        const idSessao = lerIdSessao();
+        const perfis = carregarPerfis();
+        const temSessaoValida = idSessao !== null && perfis.some((p) => p.id === idSessao);
+        if (temSessaoValida) {
+            const destino = destinoInicio(carregado);
+            setNav((n) => ({ ...n, ...destino }));
+        } else {
+            const telaAcesso: Tela = perfis.length > 0 ? 'entrada' : 'consentimento';
+            setNav((n) => ({ ...n, tela: telaAcesso }));
         }
-        setEstado(carregarEstado());
     }, []);
 
     const aplicarEstado = useCallback((novo: EstadoApp) => {
@@ -234,6 +263,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         pararFala();
         setNav((n) => ({ ...n, moduloAtivo: m, tela: 'licoes', destaque: null, anunciarLicoes: anunciar }));
     }, [pararFala]);
+    const irParaInicio = useCallback(() => {
+        if (!estado) return;
+        pararFala();
+        const destino = destinoInicio(estado);
+        setNav((n) => ({ ...n, ...destino, destaque: null, anunciarLicoes: true }));
+    }, [estado, pararFala]);
     /** Abre a tela de atividade de uma lição específica. */
     const abrirLicao = useCallback((id: string) => {
         pararFala();
@@ -245,7 +280,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return (
         <Ctx.Provider value={{
             estado, nav, pronto: true,
-            abrirModulo, abrirLicao, irPara, aplicarEstado, dispararEvento, pararFala,
+            abrirModulo, abrirLicao, irPara, irParaInicio, aplicarEstado, dispararEvento, pararFala,
+            falar, tocarAudio,
         }}>
             {children}
         </Ctx.Provider>

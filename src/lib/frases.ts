@@ -12,16 +12,6 @@ const CAMINHO_AUDIOS = '/audios';
  * `conteudo.ts`, e usam TTS em vez de áudio pré-gravado.
  */
 export const FRASES: Record<string, Frase> = {
-    inicial_novo: {
-        id: 'inicial_novo',
-        texto: 'Oi! Eu sou a Nina, e vou te acompanhar. Toca no botão grande, laranja, que está brilhando no meio da tela. É por ali que a gente começa.',
-        audio: `${CAMINHO_AUDIOS}/inicial_novo.mp3`,
-    },
-    inicial_recorrente: {
-        id: 'inicial_recorrente',
-        texto: 'Que bom te ver de novo! Toca no botão que está brilhando pra gente continuar de onde você parou.',
-        audio: `${CAMINHO_AUDIOS}/inicial_recorrente.mp3`,
-    },
     explica_assistente: {
         id: 'explica_assistente',
         texto: 'Se quiser que eu fique mutada, é só tocar no botão do microfone, ali no canto de cima, à esquerda. Toca de novo e eu volto.',
@@ -71,5 +61,62 @@ export const FRASES: Record<string, Frase> = {
         id: 'modulo_concluido',
         texto: 'Você terminou tudo desta parte! Está indo muito bem. Que tal escolher outra pra continuar aprendendo?',
         audio: `${CAMINHO_AUDIOS}/modulo_concluido.mp3`,
+    },
+
+    // fluxo de acesso (consentimento, primeiro acesso, entrada, perfis, meus dados)
+    consentimento: {
+        id: 'consentimento',
+        texto: 'Oi! Eu sou a Nina. Antes de começar, eu preciso guardar seu nome e um número de acesso, só aqui neste aparelho. Você pode apagar isso quando quiser. Toca no botão pra começar.',
+        audio: `${CAMINHO_AUDIOS}/consentimento.mp3`,
+    },
+    pedirNome: {
+        id: 'pedirNome',
+        texto: 'Qual é o seu nome?',
+        audio: `${CAMINHO_AUDIOS}/pedirNome.mp3`,
+    },
+    naoEntendiNome: {
+        id: 'naoEntendiNome',
+        texto: 'Não consegui entender direito. Pode falar seu nome de novo, bem devagar?',
+        audio: `${CAMINHO_AUDIOS}/naoEntendiNome.mp3`,
+    },
+    saudacaoEntrada: {
+        id: 'saudacaoEntrada',
+        texto: 'Oi de novo! Qual é o seu nome?',
+        audio: `${CAMINHO_AUDIOS}/saudacaoEntrada.mp3`,
+    },
+    numeroErrado: {
+        id: 'numeroErrado',
+        texto: 'Esse número não é o seu. Vamos tentar de novo?',
+        audio: `${CAMINHO_AUDIOS}/numeroErrado.mp3`,
+    },
+    perfisParecidos: {
+        id: 'perfisParecidos',
+        texto: 'Achei mais de uma pessoa parecida com esse nome. Toca no seu cartão.',
+        audio: `${CAMINHO_AUDIOS}/perfisParecidos.mp3`,
+    },
+    naoAchei: {
+        id: 'naoAchei',
+        texto: 'Não consegui te encontrar pela voz. Toca no seu cartão aqui embaixo.',
+        audio: `${CAMINHO_AUDIOS}/naoAchei.mp3`,
+    },
+    microfoneNegado: {
+        id: 'microfoneNegado',
+        texto: 'Sem problema, não consegui usar o microfone. Toca no seu cartão aqui embaixo.',
+        audio: `${CAMINHO_AUDIOS}/microfoneNegado.mp3`,
+    },
+    ouvindoDeNovo: {
+        id: 'ouvindoDeNovo',
+        texto: 'Vamos tentar de novo.',
+        audio: `${CAMINHO_AUDIOS}/ouvindoDeNovo.mp3`,
+    },
+    apagarConfirmar: {
+        id: 'apagarConfirmar',
+        texto: 'Tem certeza que quer apagar seus dados? Isso não pode ser desfeito.',
+        audio: `${CAMINHO_AUDIOS}/apagarConfirmar.mp3`,
+    },
+    apagarFeito: {
+        id: 'apagarFeito',
+        texto: 'Pronto, seus dados foram apagados.',
+        audio: `${CAMINHO_AUDIOS}/apagarFeito.mp3`,
     },
 };

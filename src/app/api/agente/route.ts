@@ -16,7 +16,7 @@ const tools: Tool[] = [
                         tela: {
                             type: SchemaType.STRING,
                             format: 'enum',
-                            enum: ['inicial', 'modulos', 'licoes', 'atividade'],
+                            enum: ['modulos', 'licoes', 'atividade'],
                         },
                     },
                     required: ['tela'],
